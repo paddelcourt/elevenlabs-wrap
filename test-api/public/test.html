@@ -227,7 +227,7 @@
     </header>
 
     <div id="auth-section" class="auth-section">
-      <a href="/login" class="btn btn-primary">Login with Spotify</a>
+      <a href="http://127.0.0.1:3001/auth/login" class="btn btn-primary">Login with Spotify</a>
     </div>
 
     <div id="authenticated-section" class="auth-section hidden">
@@ -243,7 +243,7 @@
         <div class="category-title">A. User Profile & Account</div>
         <div class="category-desc">Get user country, display name, premium status, explicit content settings</div>
         <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/user-profile', 'User Profile')">Get My Profile</button>
+          <button class="test-btn" onclick="testAPI('/stats/user-profile', 'User Profile')">Get My Profile</button>
         </div>
       </div>
 
@@ -252,16 +252,18 @@
         <div class="category-title">B. Top Artists & Tracks</div>
         <div class="category-desc">Your most listened to artists and tracks (Wrapped core)</div>
         <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/top/artists?time_range=short_term&limit=50', 'Top 50 Artists (4 weeks)')">Top 50 Artists - Last 4 Weeks</button>
-          <button class="test-btn" onclick="testAPI('/api/top/artists?time_range=short_term&limit=20', 'Top 20 Artists (4 weeks)')">Top 20 Artists - Last 4 Weeks</button>
-          <button class="test-btn" onclick="testAPI('/api/top/artists?time_range=short_term&limit=10', 'Top 10 Artists (4 weeks)')">Top 10 Artists - Last 4 Weeks</button>
-          <button class="test-btn" onclick="testAPI('/api/top/artists?time_range=medium_term&limit=50', 'Top 50 Artists (6 months)')">Top 50 Artists - Last 6 Months</button>
-          <button class="test-btn" onclick="testAPI('/api/top/artists?time_range=long_term&limit=50', 'Top 50 Artists (all time)')">Top 50 Artists - All Time</button>
-          <button class="test-btn" onclick="testAPI('/api/top/tracks?time_range=short_term&limit=50', 'Top 50 Tracks (4 weeks)')">Top 50 Tracks - Last 4 Weeks</button>
-          <button class="test-btn" onclick="testAPI('/api/top/tracks?time_range=short_term&limit=20', 'Top 20 Tracks (4 weeks)')">Top 20 Tracks - Last 4 Weeks</button>
-          <button class="test-btn" onclick="testAPI('/api/top/tracks?time_range=short_term&limit=10', 'Top 10 Tracks (4 weeks)')">Top 10 Tracks - Last 4 Weeks</button>
-          <button class="test-btn" onclick="testAPI('/api/top/tracks?time_range=medium_term&limit=50', 'Top 50 Tracks (6 months)')">Top 50 Tracks - Last 6 Months</button>
-          <button class="test-btn" onclick="testAPI('/api/top/tracks?time_range=long_term&limit=50', 'Top 50 Tracks (all time)')">Top 50 Tracks - All Time</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-artists?time_range=short_term&limit=50', 'Top 50 Artists (4 weeks)')">Top 50 Artists - Last 4 Weeks</button>
+          <button class="test-btn" onclick="saveData('/stats/save-top-artists?time_range=short_term&limit=50', 'Top Artists')">💾 Save Top Artists to JSON</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-artists?time_range=short_term&limit=20', 'Top 20 Artists (4 weeks)')">Top 20 Artists - Last 4 Weeks</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-artists?time_range=short_term&limit=10', 'Top 10 Artists (4 weeks)')">Top 10 Artists - Last 4 Weeks</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-artists?time_range=medium_term&limit=50', 'Top 50 Artists (6 months)')">Top 50 Artists - Last 6 Months</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-artists?time_range=long_term&limit=50', 'Top 50 Artists (all time)')">Top 50 Artists - All Time</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-tracks?time_range=short_term&limit=50', 'Top 50 Tracks (4 weeks)')">Top 50 Tracks - Last 4 Weeks</button>
+          <button class="test-btn" onclick="saveData('/stats/save-top-tracks?time_range=short_term&limit=50', 'Top Tracks')">💾 Save Top Tracks to JSON</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-tracks?time_range=short_term&limit=20', 'Top 20 Tracks (4 weeks)')">Top 20 Tracks - Last 4 Weeks</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-tracks?time_range=short_term&limit=10', 'Top 10 Tracks (4 weeks)')">Top 10 Tracks - Last 4 Weeks</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-tracks?time_range=medium_term&limit=50', 'Top 50 Tracks (6 months)')">Top 50 Tracks - Last 6 Months</button>
+          <button class="test-btn" onclick="testAPI('/stats/top-tracks?time_range=long_term&limit=50', 'Top 50 Tracks (all time)')">Top 50 Tracks - All Time</button>
         </div>
       </div>
 
@@ -270,73 +272,17 @@
         <div class="category-title">C. Recently Played</div>
         <div class="category-desc">Last 50 tracks with timestamps (temporal habits)</div>
         <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/recently-played', 'Recently Played')">Get Recently Played</button>
-          <button class="test-btn" onclick="saveToFile('/api/save-tracks')">Save to JSON File</button>
+          <button class="test-btn" onclick="testAPI('/stats/recently-played', 'Recently Played')">Get Recently Played</button>
+          <button class="test-btn" onclick="saveData('/stats/save-recently-played', 'Recently Played')">💾 Save to JSON File</button>
         </div>
       </div>
 
-      <!-- D. Library -->
+      <!-- D. AI Music Analysis -->
       <div class="category-card">
-        <div class="category-title">D. Library & Saved Content</div>
-        <div class="category-desc">Saved tracks, albums, shows, episodes</div>
+        <div class="category-title">🤖 D. AI Music Analysis (Claude)</div>
+        <div class="category-desc">Use Claude AI to analyze your music taste and guess your "music age" based on saved JSON files</div>
         <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/library/tracks?limit=50', 'Saved Tracks (50)')">Get Saved Tracks (50)</button>
-          <button class="test-btn" onclick="testAPI('/api/library/tracks?limit=20', 'Saved Tracks (20)')">Get Saved Tracks (20)</button>
-          <button class="test-btn" onclick="testAPI('/api/library/albums?limit=50', 'Saved Albums (50)')">Get Saved Albums (50)</button>
-          <button class="test-btn" onclick="testAPI('/api/library/albums?limit=20', 'Saved Albums (20)')">Get Saved Albums (20)</button>
-          <button class="test-btn" onclick="testAPI('/api/library/shows?limit=50', 'Saved Shows (50)')">Get Saved Shows (50)</button>
-          <button class="test-btn" onclick="testAPI('/api/library/episodes?limit=50', 'Saved Episodes (50)')">Get Saved Episodes (50)</button>
-        </div>
-      </div>
-
-      <!-- E. Playlists -->
-      <div class="category-card">
-        <div class="category-title">E. Playlists</div>
-        <div class="category-desc">User playlists (self-expression)</div>
-        <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/playlists', 'My Playlists')">Get My Playlists</button>
-        </div>
-      </div>
-
-      <!-- F. Following -->
-      <div class="category-card">
-        <div class="category-title">F. Followed Artists & Users</div>
-        <div class="category-desc">Artists and users you follow</div>
-        <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/following/artist', 'Followed Artists')">Get Followed Artists</button>
-        </div>
-      </div>
-
-      <!-- G. Playback State -->
-      <div class="category-card">
-        <div class="category-title">G. Playback State</div>
-        <div class="category-desc">Current playback device, volume, shuffle/repeat</div>
-        <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/player', 'Player State')">Get Player State</button>
-          <button class="test-btn" onclick="testAPI('/api/currently-playing', 'Currently Playing')">Get Currently Playing</button>
-        </div>
-      </div>
-
-      <!-- H. Audio Features -->
-      <div class="category-card">
-        <div class="category-title">H. Audio Features</div>
-        <div class="category-desc">Psychoacoustic features: danceability, energy, valence, tempo</div>
-        <div class="test-buttons">
-          <button class="test-btn" onclick="getAudioFeaturesForTopTracks(10, 'short_term')">Audio Features - Top 10 Tracks (4 weeks)</button>
-          <button class="test-btn" onclick="getAudioFeaturesForTopTracks(20, 'short_term')">Audio Features - Top 20 Tracks (4 weeks)</button>
-          <button class="test-btn" onclick="getAudioFeaturesForTopTracks(50, 'short_term')">Audio Features - Top 50 Tracks (4 weeks)</button>
-          <button class="test-btn" onclick="getAudioFeaturesForTopTracks(50, 'medium_term')">Audio Features - Top 50 Tracks (6 months)</button>
-          <button class="test-btn" onclick="getAudioFeaturesForTopTracks(50, 'long_term')">Audio Features - Top 50 Tracks (all time)</button>
-          <button class="test-btn" onclick="getAudioFeaturesForRecentlyPlayed()">Audio Features - Recently Played (50)</button>
-        </div>
-      </div>
-
-      <!-- I. Genre Seeds -->
-      <div class="category-card">
-        <div class="category-title">I. Genre Seeds</div>
-        <div class="category-desc">Available genre seeds for recommendations</div>
-        <div class="test-buttons">
-          <button class="test-btn" onclick="testAPI('/api/genre-seeds', 'Genre Seeds')">Get Available Genres</button>
+          <button class="test-btn" onclick="guessMusicAge()" style="background: rgba(191, 97, 255, 0.3); border-color: #bf61ff;">🎯 Guess My Music Age</button>
         </div>
       </div>
     </div>
@@ -356,6 +302,9 @@
   </div>
 
   <script>
+    // API Base URL
+    const API_BASE = 'http://127.0.0.1:3001';
+
     const urlParams = new URLSearchParams(window.location.search);
 
     if (urlParams.get('success') === 'true') {
@@ -369,7 +318,9 @@
 
     async function checkAuthStatus() {
       try {
-        const response = await fetch('/api/auth-status');
+        const response = await fetch(`${API_BASE}/auth/status`, {
+          credentials: 'include'
+        });
         const data = await response.json();
 
         if (data.authenticated) {
@@ -397,7 +348,9 @@
       errorDiv.classList.add('hidden');
 
       try {
-        const response = await fetch(endpoint);
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          credentials: 'include'
+        });
         const data = await response.json();
 
         loading.classList.add('hidden');
@@ -413,19 +366,75 @@
       }
     }
 
-    async function saveToFile(endpoint) {
+    async function saveData(endpoint, dataType) {
       try {
-        const response = await fetch(endpoint, { method: 'POST' });
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          credentials: 'include'
+        });
         const data = await response.json();
 
         if (data.success) {
-          showSuccess(`Successfully saved ${data.trackCount} tracks to ${data.filename}`);
+          showSuccess(`Successfully saved ${data.itemCount} items to ${data.filename}`);
         } else {
           throw new Error('Save failed');
         }
       } catch (error) {
-        showError('Failed to save tracks. Please try again.');
-        console.error('Error saving tracks:', error);
+        showError(`Failed to save ${dataType}. Please try again.`);
+        console.error('Error saving data:', error);
+      }
+    }
+
+    async function guessMusicAge() {
+      const loading = document.getElementById('loading');
+      const resultsSection = document.getElementById('results-section');
+      const resultsTitle = document.getElementById('results-title');
+      const results = document.getElementById('results');
+      const errorDiv = document.getElementById('error');
+
+      loading.classList.remove('hidden');
+      errorDiv.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${API_BASE}/ai/guess-music-age`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const data = await response.json();
+
+        loading.classList.add('hidden');
+
+        if (data.success && data.analysis) {
+          // Display formatted results
+          resultsSection.classList.remove('hidden');
+          resultsTitle.textContent = '🎵 Your Music Age Analysis';
+
+          const formattedResult = {
+            '🎯 Music Age': data.analysis.musicAge,
+            '📊 Match Percentage': `${data.analysis.matchPercentage}%`,
+            '✨ Era Description': data.analysis.eraDescription,
+            '🔑 Key Indicators': data.analysis.keyIndicators,
+            '🎭 Music Personality': data.analysis.musicPersonality,
+            '💭 Vibe Check': data.analysis.vibeCheck,
+            '📁 Files Analyzed': data.filesAnalyzed,
+            '⏰ Timestamp': new Date(data.timestamp).toLocaleString()
+          };
+
+          results.querySelector('code').textContent = JSON.stringify(formattedResult, null, 2);
+        } else if (data.rawResponse) {
+          // If parsing failed, show raw response
+          resultsSection.classList.remove('hidden');
+          resultsTitle.textContent = '🎵 Your Music Age Analysis (Raw)';
+          results.querySelector('code').textContent = data.rawResponse;
+        } else {
+          throw new Error(data.message || data.error || 'Analysis failed');
+        }
+
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+      } catch (error) {
+        loading.classList.add('hidden');
+        showError(`${error.message || 'Failed to analyze music age. Make sure you have saved some music data first!'}`);
+        console.error('Error:', error);
       }
     }
 
@@ -438,32 +447,31 @@
 
       try {
         // First get top tracks
-        const tracksResponse = await fetch(`/api/top/tracks?time_range=${timeRange}&limit=${limit}`);
+        const tracksResponse = await fetch(`${API_BASE}/stats/top-tracks?time_range=${timeRange}&limit=${limit}`, {
+          credentials: 'include'
+        });
         const tracksData = await tracksResponse.json();
 
-        if (!tracksData.items || tracksData.items.length === 0) {
+        if (!tracksData.data.items || tracksData.data.items.length === 0) {
           throw new Error('No top tracks found');
         }
 
-        // Extract track IDs
-        const trackIds = tracksData.items.map(item => item.id).join(',');
-
-        // Get audio features
-        const featuresResponse = await fetch(`/api/audio-features?ids=${trackIds}`);
-        const featuresData = await featuresResponse.json();
+        // Note: Audio features endpoint not yet implemented
+        const tracks = tracksData.data.items;
 
         loading.classList.add('hidden');
 
         const timeRangeText = timeRange === 'short_term' ? '4 weeks' : timeRange === 'medium_term' ? '6 months' : 'all time';
 
-        // Display combined results
+        // Display track list (audio features API not yet implemented)
         const combinedData = {
-          message: `Audio features for your top ${limit} tracks (${timeRangeText})`,
-          summary: calculateAudioFeaturesSummary(featuresData.audio_features),
-          tracks: tracksData.items.map((track, index) => ({
+          message: `Your top ${limit} tracks (${timeRangeText})`,
+          note: 'Audio features API endpoint not yet implemented',
+          tracks: tracks.map((track) => ({
             name: track.name,
             artists: track.artists.map(a => a.name).join(', '),
-            audio_features: featuresData.audio_features[index]
+            album: track.album.name,
+            popularity: track.popularity
           }))
         };
 
@@ -487,31 +495,28 @@
 
       try {
         // Get recently played tracks
-        const tracksResponse = await fetch('/api/recently-played');
+        const tracksResponse = await fetch(`${API_BASE}/stats/recently-played`, {
+          credentials: 'include'
+        });
         const tracksData = await tracksResponse.json();
 
-        if (!tracksData.items || tracksData.items.length === 0) {
+        if (!tracksData.data.items || tracksData.data.items.length === 0) {
           throw new Error('No recently played tracks found');
         }
 
-        // Extract track IDs (remove duplicates)
-        const uniqueTracks = [...new Map(tracksData.items.map(item => [item.track.id, item.track])).values()];
-        const trackIds = uniqueTracks.slice(0, 50).map(track => track.id).join(',');
-
-        // Get audio features
-        const featuresResponse = await fetch(`/api/audio-features?ids=${trackIds}`);
-        const featuresData = await featuresResponse.json();
+        // Extract unique tracks
+        const uniqueTracks = [...new Map(tracksData.data.items.map(item => [item.track.id, item.track])).values()];
 
         loading.classList.add('hidden');
 
-        // Display combined results
+        // Display track list (audio features not yet implemented)
         const combinedData = {
-          message: 'Audio features for your recently played tracks',
-          summary: calculateAudioFeaturesSummary(featuresData.audio_features),
-          tracks: uniqueTracks.slice(0, 50).map((track, index) => ({
+          message: 'Your recently played tracks',
+          note: 'Audio features API endpoint not yet implemented',
+          tracks: uniqueTracks.slice(0, 50).map((track) => ({
             name: track.name,
             artists: track.artists.map(a => a.name).join(', '),
-            audio_features: featuresData.audio_features[index]
+            album: track.album.name
           }))
         };
 
@@ -612,8 +617,18 @@
       setTimeout(() => successDiv.classList.add('hidden'), 5000);
     }
 
-    function logout() {
-      location.href = '/';
+    async function logout() {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        showSuccess('Logged out successfully!');
+        setTimeout(() => location.reload(), 1000);
+      } catch (error) {
+        console.error('Logout error:', error);
+        location.reload();
+      }
     }
   </script>
 </body>

@@ -4,6 +4,8 @@ import session from 'express-session';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import statsRoutes from './src/routes/statsRoutes.js';
+import aiRoutes from './src/routes/aiRoutes.js';
+import musicRoutes from './src/routes/musicRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +40,8 @@ app.get('/health', (req, res) => {
 // Mount routes
 app.use('/auth', authRoutes);
 app.use('/stats', statsRoutes);
+app.use('/ai', aiRoutes);
+app.use('/music', musicRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -66,6 +70,10 @@ app.listen(PORT, () => {
   console.log(`  GET  /stats/top-tracks - Get top tracks`);
   console.log(`  GET  /stats/recently-played - Get recently played`);
   console.log(`  POST /stats/save-top-artists - Save top artists to file`);
+  console.log(`  POST /stats/save-top-tracks - Save top tracks to file`);
   console.log(`  POST /stats/save-recently-played - Save recently played to file`);
   console.log(`  GET  /stats/user-profile - Get user profile`);
+  console.log(`  POST /ai/guess-music-age - Guess music age using AI`);
+  console.log(`  POST /music/generate - Generate music from prompts`);
+  console.log(`  POST /music/generate-from-analysis - Generate music from analysis`);
 });

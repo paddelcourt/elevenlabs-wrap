@@ -116,6 +116,31 @@ router.post('/save-top-artists', requireAuth, async (req, res) => {
 });
 
 /**
+ * Save top tracks to JSON file
+ * POST /stats/save-top-tracks
+ */
+router.post('/save-top-tracks', requireAuth, async (req, res) => {
+  try {
+    const timeRange = req.body?.time_range || req.query.time_range || SPOTIFY_CONFIG.TIME_RANGES.SHORT_TERM;
+    const limit = parseInt(req.body?.limit || req.query.limit) || SPOTIFY_CONFIG.LIMITS.MAX_ITEMS;
+
+    const data = await spotifyStatsService.getTopTracks(req.session, timeRange, limit);
+    const result = await storageService.saveTopTracks(data, timeRange);
+
+    res.json({
+      success: true,
+      message: 'Top tracks saved successfully',
+      ...result
+    });
+  } catch (error) {
+    console.error('Error saving top tracks:', error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({
+      error: 'Failed to save top tracks'
+    });
+  }
+});
+
+/**
  * Save recently played tracks to JSON file
  * POST /stats/save-recently-played
  */
