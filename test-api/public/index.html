@@ -199,17 +199,18 @@
 <body>
   <div class="container">
     <header>
-      <h1>🎵 Spotify Recently Played</h1>
-      <p class="subtitle">View your last 50 recently played tracks</p>
+      <h1>🎵 Spotify Stats Viewer</h1>
+      <p class="subtitle">View your Spotify listening statistics</p>
     </header>
 
     <div id="auth-section" class="auth-section">
-      <a href="/login" class="btn btn-primary">Login with Spotify</a>
+      <a href="http://127.0.0.1:3001/auth/login" class="btn btn-primary">Login with Spotify</a>
     </div>
 
     <div id="authenticated-section" class="auth-section hidden">
-      <button onclick="fetchTracks()" class="btn btn-primary">Load My Recent Tracks</button>
-      <button onclick="saveTracks()" class="btn btn-secondary">Save to JSON</button>
+      <button onclick="fetchRecentTracks()" class="btn btn-primary">Load Recent Tracks</button>
+      <button onclick="fetchTopArtists()" class="btn btn-primary">Load Top Artists (4 weeks)</button>
+      <button onclick="fetchTopTracks()" class="btn btn-primary">Load Top Tracks (4 weeks)</button>
       <button onclick="logout()" class="btn btn-secondary">Logout</button>
     </div>
 
@@ -225,6 +226,9 @@
   </div>
 
   <script>
+    // API Base URL - must be defined first
+    const API_BASE = 'http://127.0.0.1:3001';
+
     // Check URL parameters for success/error messages
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -240,7 +244,9 @@
 
     async function checkAuthStatus() {
       try {
-        const response = await fetch('/api/auth-status');
+        const response = await fetch(`${API_BASE}/auth/status`, {
+          credentials: 'include'
+        });
         const data = await response.json();
 
         if (data.authenticated) {
@@ -255,42 +261,55 @@
       }
     }
 
-    async function fetchTracks() {
+    async function fetchRecentTracks() {
+      await fetchData('recently-played', 'Recent Tracks', displayRecentTracks);
+    }
+
+    async function fetchTopArtists() {
+      await fetchData('top-artists?time_range=short_term&limit=50', 'Top Artists', displayTopArtists);
+    }
+
+    async function fetchTopTracks() {
+      await fetchData('top-tracks?time_range=short_term&limit=50', 'Top Tracks', displayTopTracks);
+    }
+
+    async function fetchData(endpoint, title, displayFunction) {
       const loading = document.getElementById('loading');
-      const tracksContainer = document.getElementById('tracks-container');
+      const container = document.getElementById('tracks-container');
       const errorDiv = document.getElementById('error');
 
       loading.classList.remove('hidden');
-      tracksContainer.innerHTML = '';
+      container.innerHTML = '';
       errorDiv.classList.add('hidden');
 
       try {
-        const response = await fetch('/api/recently-played');
+        const response = await fetch(`${API_BASE}/stats/${endpoint}`, {
+          credentials: 'include'
+        });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch tracks');
+          throw new Error(`Failed to fetch ${title.toLowerCase()}`);
         }
 
-        const data = await response.json();
+        const result = await response.json();
         loading.classList.add('hidden');
 
-        if (data.items.length === 0) {
-          tracksContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">No recently played tracks found.</p>';
+        if (!result.success || !result.data || !result.data.items || result.data.items.length === 0) {
+          container.innerHTML = `<p style="text-align: center; opacity: 0.7;">No ${title.toLowerCase()} found.</p>`;
           return;
         }
 
-        displayTracks(data.items);
+        displayFunction(result.data.items, title);
       } catch (error) {
         loading.classList.add('hidden');
-        showError('Failed to load tracks. Please try logging in again.');
-        console.error('Error fetching tracks:', error);
+        showError(`Failed to load ${title.toLowerCase()}. Please try logging in again.`);
+        console.error(`Error fetching ${title}:`, error);
       }
     }
 
-    function displayTracks(tracks) {
-      const tracksContainer = document.getElementById('tracks-container');
-
-      const countHtml = `<div class="track-count">Found ${tracks.length} recently played tracks</div>`;
+    function displayRecentTracks(tracks, title) {
+      const container = document.getElementById('tracks-container');
+      const countHtml = `<div class="track-count">${title}: ${tracks.length} tracks</div>`;
 
       const tracksHtml = tracks.map((item, index) => {
         const track = item.track;
@@ -314,7 +333,60 @@
         `;
       }).join('');
 
-      tracksContainer.innerHTML = countHtml + tracksHtml;
+      container.innerHTML = countHtml + tracksHtml;
+    }
+
+    function displayTopArtists(artists, title) {
+      const container = document.getElementById('tracks-container');
+      const countHtml = `<div class="track-count">${title}: ${artists.length} artists</div>`;
+
+      const artistsHtml = artists.map((artist, index) => {
+        const genres = artist.genres.slice(0, 3).join(', ') || 'No genres';
+        const followers = artist.followers.total.toLocaleString();
+
+        return `
+          <div class="track-item">
+            <div class="track-number">${index + 1}</div>
+            <div class="track-info">
+              <div class="track-name">${escapeHtml(artist.name)}</div>
+              <div class="track-artist">Genres: ${escapeHtml(genres)}</div>
+              <div class="track-album">Followers: ${followers}</div>
+            </div>
+            <div class="track-meta">
+              <div class="track-duration">Popularity: ${artist.popularity}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = countHtml + artistsHtml;
+    }
+
+    function displayTopTracks(tracks, title) {
+      const container = document.getElementById('tracks-container');
+      const countHtml = `<div class="track-count">${title}: ${tracks.length} tracks</div>`;
+
+      const tracksHtml = tracks.map((track, index) => {
+        const artists = track.artists.map(artist => artist.name).join(', ');
+        const duration = `${Math.floor(track.duration_ms / 60000)}:${String(Math.floor((track.duration_ms % 60000) / 1000)).padStart(2, '0')}`;
+
+        return `
+          <div class="track-item">
+            <div class="track-number">${index + 1}</div>
+            <div class="track-info">
+              <div class="track-name">${escapeHtml(track.name)}</div>
+              <div class="track-artist">${escapeHtml(artists)}</div>
+              <div class="track-album">${escapeHtml(track.album.name)}</div>
+            </div>
+            <div class="track-meta">
+              <div class="track-duration">${duration}</div>
+              <div>Popularity: ${track.popularity}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = countHtml + tracksHtml;
     }
 
     function showError(message) {
@@ -331,25 +403,15 @@
       setTimeout(() => successDiv.classList.add('hidden'), 5000);
     }
 
-    async function saveTracks() {
+    async function logout() {
       try {
-        const response = await fetch('/api/save-tracks', {
-          method: 'POST'
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          credentials: 'include'
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to save tracks');
-        }
-
-        const data = await response.json();
-        showSuccess(`Successfully saved ${data.trackCount} tracks to ${data.filename}`);
       } catch (error) {
-        showError('Failed to save tracks. Please try again.');
-        console.error('Error saving tracks:', error);
+        console.error('Logout error:', error);
       }
-    }
-
-    function logout() {
       location.reload();
     }
 
