@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { IntroSlide } from './components/IntroSlide';
 import { TopGenresSlide } from './components/TopGenresSlide';
@@ -9,6 +9,14 @@ import { AlbumsCountSlide } from './components/AlbumsCountSlide';
 import { TopAlbumSlide } from './components/TopAlbumSlide';
 import { TopAlbumsSlide } from './components/TopAlbumsSlide';
 import { BackgroundAsset } from './components/BackgroundAsset';
+import bg1 from '../../../assets/eleven_labs_background_1.mp4';
+import bg2 from '../../../assets/eleven_labs_background_2.mp4';
+import bg3 from '../../../assets/eleven_labs_background_3.mp4';
+import bg4 from '../../../assets/eleven_labs_background_4.mp4';
+import bg5 from '../../../assets/eleven_labs_background_5.mp4';
+import bg6 from '../../../assets/eleven_labs_background_6.mp4';
+import bg7 from '../../../assets/eleven_labs_background_7.mp4';
+import bg8 from '../../../assets/eleven_labs_background_8.mp4';
 
 const mockData = {
   genreCount: 127,
@@ -35,7 +43,9 @@ const mockData = {
 
 export default function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const slides = [
     <IntroSlide genreCount={mockData.genreCount} />,
@@ -48,42 +58,80 @@ export default function App() {
     <TopAlbumsSlide albums={mockData.topAlbums} />
   ];
 
-  useEffect(() => {
-    if (!autoPlay) return;
-
-    const timer = setTimeout(() => {
-      if (currentSlide < slides.length - 1) {
-        setCurrentSlide(prev => prev + 1);
-      } else {
-        setAutoPlay(false);
-      }
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, [currentSlide, autoPlay, slides.length]);
+  const videoSources = [bg1, bg2, bg3, bg4, bg5, bg6, bg7, bg8];
 
   const goToSlide = (index: number) => {
+    if (index < 0 || index > slides.length - 1) return;
     setCurrentSlide(index);
-    setAutoPlay(false);
   };
 
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(prev => prev + 1);
-      setAutoPlay(false);
     }
   };
 
   const prevSlide = () => {
     if (currentSlide > 0) {
       setCurrentSlide(prev => prev - 1);
-      setAutoPlay(false);
     }
   };
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (isNavigating) return;
+      if (Math.abs(e.deltaY) < 10) return;
+      e.preventDefault();
+      setIsNavigating(true);
+      if (e.deltaY > 0) nextSlide();
+      else prevSlide();
+      setTimeout(() => setIsNavigating(false), 650);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0]?.clientY ?? null;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isNavigating || touchStartY.current === null) return;
+      const delta = touchStartY.current - (e.changedTouches[0]?.clientY ?? touchStartY.current);
+      if (Math.abs(delta) < 24) return;
+      setIsNavigating(true);
+      if (delta > 0) nextSlide();
+      else prevSlide();
+      setTimeout(() => setIsNavigating(false), 650);
+      touchStartY.current = null;
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isNavigating, currentSlide]);
+
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-black text-white flex items-center justify-center overflow-hidden relative">
       <BackgroundAsset />
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <video
+          key={currentSlide}
+          src={videoSources[currentSlide % videoSources.length]}
+          className="w-full h-full object-cover opacity-80"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
       <div className="w-full max-w-2xl h-screen relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
