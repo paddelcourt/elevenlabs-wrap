@@ -86,14 +86,10 @@ export default function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // App state based on hash
-  const [appState, setAppState] = useState<'login' | 'loading' | 'slides'>(() => {
-    const hash = window.location.hash;
-    if (hash === '#loading') return 'loading';
-    if (hash === '#slides') return 'slides';
-    return 'login';
-  });
+  const [appState, setAppState] = useState<'login' | 'loading' | 'slides'>('login');
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [trackUrls, setTrackUrls] = useState<string[]>([]);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTrackTitle, setCurrentTrackTitle] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(true);
@@ -113,7 +109,13 @@ export default function App() {
     <TopSongsSlide songs={slideData.topSongs} bgColor={textPalette[4]} />,
     <AlbumsCountSlide count={slideData.albumCount} bgColor={textPalette[5]} />,
     <TopAlbumSlide album={slideData.topAlbum} bgColor={textPalette[6]} />,
-    <TopAlbumsSlide albums={slideData.topAlbums} bgColor={textPalette[7]} />
+    <TopAlbumsSlide
+      albumTitle={analysisData?.personalAlbumTitle || 'Your Personal Album'}
+      albumArtist={analysisData?.personalAlbumArtist || ''}
+      tracks={analysisData?.musicPrompts || []}
+      trackUrls={trackUrls}
+      bgColor={textPalette[7]}
+    />
   ];
 
   const togglePlayPause = () => {
@@ -144,6 +146,10 @@ export default function App() {
 
   // Handler for when loading completes
   const handleLoadingComplete = (analysis: any, urls: string[]) => {
+    // Persist to localStorage
+    localStorage.setItem('elevenlabs_analysis', JSON.stringify(analysis));
+    localStorage.setItem('elevenlabs_tracks', JSON.stringify(urls));
+
     setAnalysisData(analysis);
     setTrackUrls(urls);
     window.location.hash = '#slides';
@@ -214,17 +220,76 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isPlaying]);
 
+  // Check authentication and restore state on mount
   useEffect(() => {
-    // Check if returning from Spotify auth
-    const hash = window.location.hash;
-    const queryString = hash.includes('?') ? hash.split('?')[1] : '';
-    const urlParams = new URLSearchParams(queryString);
+    const checkAuth = async () => {
+      try {
+        // Check if returning from Spotify auth
+        const hash = window.location.hash;
+        const queryString = hash.includes('?') ? hash.split('?')[1] : '';
+        const urlParams = new URLSearchParams(queryString);
 
-    if (urlParams.get('success') === 'true') {
-      // Redirect to loading screen
-      window.location.hash = '#loading';
-      setAppState('loading');
-    }
+        if (urlParams.get('success') === 'true') {
+          // Redirect to loading screen
+          window.location.hash = '#loading';
+          setAppState('loading');
+          setIsCheckingAuth(false);
+          return;
+        }
+
+        // Try to verify if user is authenticated by checking backend
+        const response = await fetch('http://127.0.0.1:3001/auth/status', {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.authenticated) {
+            // User is authenticated, try to restore from localStorage
+            const storedAnalysis = localStorage.getItem('elevenlabs_analysis');
+            const storedTracks = localStorage.getItem('elevenlabs_tracks');
+
+            if (storedAnalysis && storedTracks) {
+              // Restore from localStorage
+              const analysis = JSON.parse(storedAnalysis);
+              const tracks = JSON.parse(storedTracks);
+              setAnalysisData(analysis);
+              setTrackUrls(tracks);
+
+              // Navigate to slides or respect current hash
+              if (hash === '#slides' || !hash || hash === '#') {
+                window.location.hash = '#slides';
+                setAppState('slides');
+              } else if (hash === '#loading') {
+                setAppState('loading');
+              }
+            } else {
+              // User is authenticated but no cached data, go to loading
+              window.location.hash = '#loading';
+              setAppState('loading');
+            }
+          } else {
+            // Not authenticated, show login
+            setAppState('login');
+            window.location.hash = '';
+          }
+        } else {
+          // Error checking auth, default to login
+          setAppState('login');
+          window.location.hash = '';
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        // On error, default to login
+        setAppState('login');
+        window.location.hash = '';
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   useEffect(() => {
@@ -297,6 +362,15 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isNavigating, currentSlide, appState]);
+
+  // Show nothing while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   // Render login page
   if (appState === 'login') {
