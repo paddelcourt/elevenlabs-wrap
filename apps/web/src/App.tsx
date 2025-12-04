@@ -18,6 +18,7 @@ import bg6 from '../../../assets/eleven_labs_background_6.mp4';
 import bg7 from '../../../assets/eleven_labs_background_7.mp4';
 import bg8 from '../../../assets/eleven_labs_background_8.mp4';
 import { LoginPage } from './components/LoginPage';
+import { LoadingScreen } from './components/LoadingScreen';
 
 const mockData = {
   genreCount: 127,
@@ -48,9 +49,15 @@ export default function App() {
   const [isNavigating, setIsNavigating] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [showLogin, setShowLogin] = useState(
-    typeof window !== 'undefined' && window.location.hash === '#login'
-  );
+
+  // App state based on hash
+  const [appState, setAppState] = useState<'login' | 'loading' | 'slides'>(() => {
+    const hash = window.location.hash;
+    if (hash === '#loading') return 'loading';
+    if (hash === '#slides') return 'slides';
+    return 'login';
+  });
+  const [analysisData, setAnalysisData] = useState<any>(null);
 
   const slides = [
     <IntroSlide genreCount={mockData.genreCount} />,
@@ -85,15 +92,42 @@ export default function App() {
     }
   };
 
+  // Handler for when loading completes
+  const handleLoadingComplete = (analysis: any) => {
+    setAnalysisData(analysis);
+    window.location.hash = '#slides';
+    setAppState('slides');
+  };
+
   useEffect(() => {
-    const handleHash = () => setShowLogin(window.location.hash === '#login');
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    // Check if returning from Spotify auth
+    const hash = window.location.hash;
+    const queryString = hash.includes('?') ? hash.split('?')[1] : '';
+    const urlParams = new URLSearchParams(queryString);
+
+    if (urlParams.get('success') === 'true') {
+      // Redirect to loading screen
+      window.location.hash = '#loading';
+      setAppState('loading');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Listen for hash changes
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#loading') setAppState('loading');
+      else if (hash === '#slides') setAppState('slides');
+      else setAppState('login');
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (showLogin) return;
+    if (appState !== 'slides') return;
     if (!el) return;
 
     const handleWheel = (e: WheelEvent) => {
@@ -147,10 +181,16 @@ export default function App() {
       el.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isNavigating, currentSlide, showLogin]);
+  }, [isNavigating, currentSlide, appState]);
 
-  if (showLogin) {
+  // Render login page
+  if (appState === 'login') {
     return <LoginPage />;
+  }
+
+  // Render loading screen
+  if (appState === 'loading') {
+    return <LoadingScreen onComplete={handleLoadingComplete} />;
   }
 
   return (
