@@ -117,53 +117,72 @@ class AIAnalysisService {
     console.log('Context length:', musicDataContext.length, 'characters');
 
     // Create the prompt for Claude
-    const prompt = `You are a fun, friendly music analyst who's great at figuring out people's ages from their playlists. I'm going to show you someone's Spotify data, and your job is to guess how old they are!
+    const prompt = `You are an AI music curator creating a personalized "ElevenLabs Wrapped" experience. Based on this user's Spotify listening data, you'll:
 
-Here's what they've been listening to:
+1. Analyze their music taste and age
+2. Create a PERSONALIZED ALBUM of 8 instrumental tracks just for them
+3. Suggest 5 other albums we could generate in the future
+
+Here's their Spotify data:
 
 ${musicDataContext}
 
-Now, analyze this like you're talking to a friend:
-1. When were these artists at their peak? When would someone be a teen listening to them?
-2. Are they vibing with current hits or living in the past?
-3. Check those release dates - nostalgia is real!
-4. Think about generations: Gen Z = 2018-2024 bangers, Millennials = 2000s-2015 classics, Gen X = 90s-2000s hits
-5. Are they discovering old gems or keeping up with TikTok trends?
+Your task: Create a custom instrumental album that captures the ESSENCE of their music taste. Think of it like Spotify Wrapped meets AI music generation.
 
-Now give me your best guess! Write your response as a JSON object:
+Write your response as a JSON object with EXACTLY these fields:
 
 {
-  "estimatedAge": number (JUST the number, like 25 - NOT "25 years old"),
+  "estimatedAge": number (JUST the number, like 25),
   "ageRange": "string (like '18-24', '25-34')",
   "confidence": number (0-100),
   "reasoning": [
-    "Write ONLY 1-2 total bullet points in 2nd person. Keep it SUPER short.",
-    "Example: 'You're vibing to 2010s hits - definitely your teen years.'",
-    "Example: 'Your current artist picks scream Gen Z energy.'",
-    "MAXIMUM 1-2 bullets total, each one sentence!"
+    "Write ONLY 1-2 bullet points in 2nd person.",
+    "Example: 'You're vibing to 2010s indie - definitely your formative years.'",
+    "Keep it SUPER short - one sentence each!"
   ],
-  "musicGeneration": "string (fun label like 'Gen Z TikTok Enthusiast', 'Emo Millennial', '90s Kid Forever')",
-  "insights": "string (1-2 fun sentences directly addressing them about their taste, using 'you' and 'your')",
-  "topGenres": ["list the top 5 genres from their music as strings"],
-  "musicPrompts": [
-    "Create 10 objects with 'title' and 'prompt' for instrumental tracks based on their taste",
-    "CRITICAL: DO NOT mention any specific artist names, band names, or celebrity names!",
-    "CRITICAL: All tracks must be INSTRUMENTAL ONLY - no vocals, no singing, no lyrics",
-    "",
-    "Each object should be:",
-    "{",
-    "  \"title\": \"Creative 2-4 word track name\",",
-    "  \"prompt\": \"[Mood] [genre] track at [BPM or slow/medium/fast], featuring [main instruments], in the style of [era/influence]. The music should feel [2-3 adjectives] and be suitable for [use case]. Include [build/drop/solo/looping/etc.].\"",
-    "}",
+  "musicGeneration": "string (fun label like 'Indie Millennial', 'Gen Z Pop Enthusiast', 'Alt-Rock Nostalgic')",
+  "insights": "string (1-2 sentences about their taste, using 'you/your'. Keep it personal and fun!)",
+
+  "genreCount": number (count all unique genres from their data),
+  "topGenres": ["genre1", "genre2", "genre3", "genre4", "genre5"],
+
+  "personalAlbumTitle": "string (CREATIVE album name for THEIR personalized 8-track album. Examples: 'Midnight Nostalgia', 'Digital Dreams', 'Sunset Frequencies', 'Urban Echoes')",
+  "personalAlbumArtist": "Your AI",
+  "personalAlbumDescription": "string (One compelling sentence describing what makes THIS album special for THEM specifically)",
+
+  "recommendedAlbums": [
+    "Create 5 OTHER album concepts we could generate for them based on their taste.",
+    "Each album should explore a different mood/vibe they'd enjoy.",
+    "Format: { \"title\": \"Album Name\", \"description\": \"One sentence about the vibe\" }",
     "",
     "Examples:",
-    "{ \"title\": \"Neon Pulse\", \"prompt\": \"Uplifting electronic track at 128 BPM, featuring synthesizers and deep bass, in the style of modern EDM. The music should feel energetic, euphoric, and uplifting and be suitable for workout sessions. Include a build-up and powerful drop.\" }",
-    "{ \"title\": \"Autumn Reflection\", \"prompt\": \"Melancholic indie track at medium tempo, featuring acoustic guitar and soft piano, in the style of 2010s indie folk. The music should feel introspective, calm, and nostalgic and be suitable for study sessions. Include gentle looping melodies.\" }",
-    "{ \"title\": \"Shadow Realm\", \"prompt\": \"Dark hip-hop beat at 85 BPM, featuring heavy 808 bass and crisp hi-hats, in the style of trap music. The music should feel menacing, intense, and hypnotic and be suitable for gaming. Include hard-hitting drops.\" }",
+    "{ \"title\": \"Rainy Day Reflections\", \"description\": \"Melancholic lo-fi beats perfect for introspective afternoons.\" }",
+    "{ \"title\": \"Neon Highways\", \"description\": \"Synthwave instrumentals capturing late-night city drives.\" }",
+    "{ \"title\": \"Forest Ambience\", \"description\": \"Nature-inspired soundscapes for deep meditation and focus.\" }",
     "",
-    "Make titles creative and related to the mood/genre!",
-    "Use appropriate BPM ranges: slow (60-90), medium (90-120), fast (120-180)",
-    "Common use cases: gaming, study, workout, vlog background, trailer music, meditation, cooking, driving"
+    "Make them VARIED - different genres/moods they'd explore!"
+  ],
+
+  "musicPrompts": [
+    "Create 8 track objects that form a COHESIVE ALBUM based on their taste.",
+    "These tracks will be ACTUALLY GENERATED using ElevenLabs AI music.",
+    "",
+    "CRITICAL RULES:",
+    "- INSTRUMENTAL ONLY - absolutely no vocals, singing, or lyrics",
+    "- NO artist/band/celebrity names",
+    "- Each track should fit the overall album vibe",
+    "- Vary the energy levels across the 8 tracks for good album flow",
+    "",
+    "Format: { \"title\": \"Track Name\", \"prompt\": \"detailed generation prompt\" }",
+    "",
+    "Prompt Template:",
+    "\"[Mood] [genre] track at [BPM], featuring [instruments], in the style of [era/influence]. The music should feel [adjectives] and be suitable for [use case]. Include [musical elements].\"",
+    "",
+    "Example Track:",
+    "{ \"title\": \"Neon Pulse\", \"prompt\": \"Uplifting electronic track at 128 BPM, featuring synthesizers and deep bass, in the style of modern EDM. The music should feel energetic, euphoric, and driving and be suitable for workout sessions. Include a powerful build-up and drop.\" }",
+    "",
+    "BPM Guidelines: slow (60-90), medium (90-120), fast (120-180)",
+    "Use Cases: workout, study, gaming, relaxation, driving, focus, meditation, cooking"
   ]
 }
 
