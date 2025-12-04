@@ -109,13 +109,7 @@ export default function App() {
     <TopSongsSlide songs={slideData.topSongs} bgColor={textPalette[4]} />,
     <AlbumsCountSlide count={slideData.albumCount} bgColor={textPalette[5]} />,
     <TopAlbumSlide album={slideData.topAlbum} bgColor={textPalette[6]} />,
-    <TopAlbumsSlide
-      albumTitle={analysisData?.personalAlbumTitle || 'Your Personal Album'}
-      albumArtist={analysisData?.personalAlbumArtist || ''}
-      tracks={analysisData?.musicPrompts || []}
-      trackUrls={trackUrls}
-      bgColor={textPalette[7]}
-    />
+    <TopAlbumsSlide albums={slideData.topAlbums} bgColor={textPalette[7]} />
   ];
 
   const togglePlayPause = () => {
