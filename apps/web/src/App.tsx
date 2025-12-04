@@ -95,6 +95,9 @@ export default function App() {
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [trackUrls, setTrackUrls] = useState<string[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentTrackTitle, setCurrentTrackTitle] = useState<string>('');
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [waveformBars, setWaveformBars] = useState<number[]>([3, 7, 4, 8, 5, 9, 6, 10, 5, 8, 4, 7, 6, 9, 5, 8]);
 
   const videoSources = [bg1, bg2, bg3, bg4, bg5, bg6, bg7, bg8];
   const textPalette = ['#39ff14', '#ff914d', '#7dd3ff', '#a855f7', '#ff5fa0', '#ff6b6b', '#1f4b99', '#0f7b3f'];
@@ -113,9 +116,16 @@ export default function App() {
     <TopAlbumsSlide albums={slideData.topAlbums} bgColor={textPalette[7]} />
   ];
 
-  const goToSlide = (index: number) => {
-    if (index < 0 || index > slides.length - 1) return;
-    setCurrentSlide(index);
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().catch((err: any) => console.error('Audio playback failed:', err));
+      setIsPlaying(true);
+    }
   };
 
   const nextSlide = () => {
@@ -144,10 +154,16 @@ export default function App() {
   useEffect(() => {
     if (appState !== 'slides' || trackUrls.length === 0) return;
 
-    const trackIndex = currentSlide % trackUrls.length;
+    // Use currentSlide directly as trackIndex (no modulo) to ensure 1:1 mapping
+    const trackIndex = currentSlide;
     const trackUrl = trackUrls[trackIndex];
 
     if (!trackUrl) return;
+
+    // Update current track title
+    const musicPrompts = analysisData?.musicPrompts || [];
+    const trackInfo = musicPrompts[trackIndex];
+    setCurrentTrackTitle(trackInfo?.title || `Track ${trackIndex + 1}`);
 
     // Create or update audio element
     if (!audioRef.current) {
@@ -170,6 +186,7 @@ export default function App() {
         audio.volume = 0;
 
         audio.play().then(() => {
+          setIsPlaying(true);
           const fadeIn = setInterval(() => {
             if (audio.volume < 0.45) {
               audio.volume = Math.min(0.5, audio.volume + 0.05);
@@ -177,7 +194,7 @@ export default function App() {
               clearInterval(fadeIn);
             }
           }, 50);
-        }).catch(err => console.error('Audio playback failed:', err));
+        }).catch((err: any) => console.error('Audio playback failed:', err));
       }
     }, 50);
 
@@ -185,6 +202,17 @@ export default function App() {
       clearInterval(fadeOut);
     };
   }, [currentSlide, appState, trackUrls]);
+
+  // Animate waveform bars
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      setWaveformBars(prev => prev.map(() => Math.floor(Math.random() * 8) + 3));
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   useEffect(() => {
     // Check if returning from Spotify auth
@@ -308,33 +336,92 @@ export default function App() {
         </AnimatePresence>
         <div className="absolute inset-0 bg-black/40" />
       </div>
-      <div className="w-full max-w-2xl h-screen relative z-10">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 1, x: -30 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="absolute inset-0 flex items-center justify-center p-8 slide-block"
-          >
-            {slides[currentSlide]}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Navigation dots */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-10">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentSlide ? 'bg-black w-8' : 'bg-black/30'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+      <div className="w-full max-w-2xl relative z-10 flex flex-col items-center justify-center" style={{ minHeight: '80vh' }}>
+        <div className="relative w-full" style={{ height: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 1, x: -30 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="absolute inset-0 flex items-center justify-center p-8 slide-block"
+            >
+              {slides[currentSlide]}
+            </motion.div>
+          </AnimatePresence>
         </div>
+
+        {/* Music Player Widget - Bottom of Card */}
+        {currentTrackTitle && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white text-black px-6 py-5 rounded-full shadow-lg flex items-center gap-4"
+            style={{ minWidth: '400px', maxWidth: '90%', marginTop: '12px', minHeight: '72px' }}
+          >
+            {/* Previous button */}
+            <button
+              onClick={prevSlide}
+              disabled={currentSlide === 0}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+              aria-label="Previous track"
+            >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                <path d="M3 2v12M13 2L6 8l7 6V2z" fill="currentColor" />
+              </svg>
+            </button>
+
+            {/* Play/Pause button */}
+            <button
+              onClick={togglePlayPause}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-black text-white hover:bg-gray-800 transition-colors flex-shrink-0 mr-2"
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect x="7" y="5" width="3" height="14" rx="1" fill="currentColor" />
+                  <rect x="14" y="5" width="3" height="14" rx="1" fill="currentColor" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 5.5v13l11-6.5L8 5.5z" fill="currentColor" />
+                </svg>
+              )}
+            </button>
+
+            {/* Waveform visualization */}
+            <div className="flex items-center gap-2 flex-shrink-0 h-10">
+              {waveformBars.slice(0, 8).map((height, i) => (
+                <div
+                  key={i}
+                  className="bg-black rounded-sm transition-all duration-150"
+                  style={{
+                    width: '5px',
+                    height: `${isPlaying ? height * 3.5 : 8}px`,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Track title only */}
+            <div className="flex-1 min-w-0 px-2 text-center">
+              <div className="text-base font-semibold truncate">{currentTrackTitle}</div>
+            </div>
+
+            {/* Next button */}
+            <button
+              onClick={nextSlide}
+              disabled={currentSlide === slides.length - 1}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+              aria-label="Next track"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M13 2v12M3 2l7 6-7 6V2z" fill="currentColor" />
+              </svg>
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   );
