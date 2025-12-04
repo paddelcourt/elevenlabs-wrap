@@ -59,8 +59,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🎵 ElevenLabs Wrapped API running at http://127.0.0.1:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🎵 ElevenLabs Wrapped API running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`\nAvailable endpoints:`);
   console.log(`  GET  /health - Health check`);
