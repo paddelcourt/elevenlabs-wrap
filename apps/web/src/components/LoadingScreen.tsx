@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import elevatorMusic from '../../../../assets/elevator_music.mp3';
 
-const API_BASE = 'http://127.0.0.1:3001';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001';
 
 interface LoadingScreenProps {
   onComplete: (analysisData: any, trackUrls: string[]) => void;

@@ -224,7 +224,8 @@ export default function App() {
         }
 
         // Try to verify if user is authenticated by checking backend
-        const response = await fetch('http://127.0.0.1:3001/auth/status', {
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001';
+        const response = await fetch(`${API_BASE}/auth/status`, {
           credentials: 'include'
         });
 
